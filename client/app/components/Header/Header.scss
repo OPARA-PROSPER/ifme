@@ -28,7 +28,6 @@
     font-size: $size-16;
     @media screen and (max-width: $medium) {
       text-align: center;
-      font-size: $size-18;
     }
   }
 
@@ -100,16 +99,17 @@
       color: $white;
       &Links {
         @include setFontSize($size-0);
-        @include setMargin($size-14, $size-0, $size-0, $size-0);
+        margin-top: $size-4;
         line-height: 3.5;
         display: flex;
         flex-direction: row;
+        flex-wrap: wrap;
         align-items: center;
         justify-content: space-evenly;
         > div {
-          @include setMargin($size-0, $size-8, $size-0, $size-0);
+          margin: $size-8 $size-8 $size-0 $size-0;
           &:last-of-type {
-            @include setMargin($size-0, $size-0, $size-0, $size-0);
+            margin: $size-8 $size-0 $size-0 $size-0;
           }
         }
       }
@@ -143,7 +143,6 @@
         flex-direction: row;
         letter-spacing: 0.0571429em;
         text-transform: uppercase;
-        font-weight: $font-weight-300;
         > div {
           @include setMargin($size-0, $size-26, $size-0, $size-0);
         }

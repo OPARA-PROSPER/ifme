@@ -1,9 +1,5 @@
 # frozen_string_literal: true
-
-# rubocop:disable ModuleLength
 module MeetingsHelper
-  include FormHelper
-
   def get_meeting_members(meeting)
     meeting_spots = spots(meeting)
     in_meeting = in_meeting(meeting)
@@ -16,85 +12,13 @@ module MeetingsHelper
     end
   end
 
-  def new_meeting_props
-    new_form_props(meeting_form_inputs, meetings_path)
-  end
+  def google_cal_actions(meeting)
+    return {} unless current_user.google_oauth2_enabled?
 
-  def edit_meeting_props
-    edit_form_props(meeting_form_inputs, meeting_path(@meeting))
+    generate_google_cal_actions_hash(meeting)
   end
 
   private
-
-  # rubocop:disable MethodLength
-  def meeting_form_inputs
-    [
-      {
-        id: 'meeting_name',
-        type: 'text',
-        name: 'meeting[name]',
-        label: t('common.name'),
-        value: @meeting.name || nil,
-        required: true,
-        dark: true
-      },
-      {
-        id: 'meeting_location',
-        type: 'text',
-        name: 'meeting[location]',
-        label: t('common.form.location'),
-        value: @meeting.location || nil,
-        placeholder: t('meetings.form.location_placeholder'),
-        required: true,
-        dark: true
-      },
-      {
-        id: 'meeting_time',
-        type: 'time',
-        name: 'meeting[time]',
-        label: t('meetings.info.meeting_time'),
-        value: @meeting.time || nil,
-        required: true,
-        dark: true
-      },
-      {
-        id: 'meeting_date',
-        type: 'date',
-        name: 'meeting[date]',
-        label: t('common.date'),
-        value: @meeting.date || nil,
-        required: true,
-        dark: true
-      },
-      {
-        id: 'meeting_maxmembers',
-        type: 'number',
-        name: 'meeting[maxmembers]',
-        label: t('meetings.form.maximum_members'),
-        value: @meeting.maxmembers.to_s || nil,
-        placeholder: t('meetings.form.maximum_placeholder'),
-        min: 0,
-        required: true,
-        dark: true
-      },
-      {
-        id: 'meeting_description',
-        type: 'textarea',
-        name: 'meeting[description]',
-        label: t('common.form.description'),
-        value: @meeting.description || nil,
-        required: true,
-        dark: true
-      },
-      {
-        id: 'meeting_group_id',
-        type: 'hidden',
-        name: 'meeting[group_id]',
-        value:  @group.id || @meeting.group_id
-      }
-    ]
-  end
-  # rubocop:enable MethodLength
 
   def not_attending(id)
     t('shared.meeting_info.not_attending',
@@ -149,5 +73,34 @@ module MeetingsHelper
       many_spots(meeting.id, meeting_space)
     end
   end
+
+  def generate_google_cal_actions_hash(meeting)
+    return {} unless (meeting_member = meeting.meeting_member(current_user))
+
+    if meeting_member.google_cal_event_id
+      return remove_from_google_cal_hash(meeting)
+    end
+
+    add_to_google_cal_hash(meeting)
+  end
+
+  def remove_from_google_cal_hash(meeting)
+    {
+      remove_from_google_cal: {
+        name: t('meetings.google_cal.destroy.remove'),
+        link: meeting_google_calendar_event_path(meeting),
+        dataMethod: 'delete'
+      }
+    }
+  end
+
+  def add_to_google_cal_hash(meeting)
+    {
+      add_to_google_cal: {
+        name: t('meetings.google_cal.create.add'),
+        link: meeting_google_calendar_event_path(meeting),
+        dataMethod: 'post'
+      }
+    }
+  end
 end
-# rubocop:enable ModuleLength

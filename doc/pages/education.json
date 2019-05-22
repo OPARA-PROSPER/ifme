@@ -199,7 +199,7 @@
   },
   {
     "name": "Mental Health Knowledge Base",
-    "link": "https://mhwkb.github.io/",
+    "link": "https://mentalhealth-kb.net/",
     "tags": ["directory", "learning"],
     "languages": ["en"]
   },
@@ -225,6 +225,48 @@
     "name": "Psychology Today",
     "link": "https://www.psychologytoday.com",
     "tags": ["learning", "directory"],
+    "languages": ["en"]
+  },
+  {
+    "name": "Tech Disability Project",
+    "link": "https://medium.com/tech-disability-project",
+    "tags": ["blog", "tech_industry", "workplace"],
+    "languages": ["en"]
+  },
+  {
+    "name": "Attention Deficit Disorder Association (US)",
+    "link": "https://add.org/",
+    "tags": ["add", "adhd", "learning"],
+    "languages": ["en"]
+  },
+  {
+    "name": "Rise",
+    "link": "http://www.risenow.us/",
+    "tags": ["sexual_assault_survivors", "political_movement"],
+    "languages": ["en"]
+  },
+  {
+    "name": "Center on Addiction (US)",
+    "link": "https://www.centeronaddiction.org/addiction",
+    "tags": ["addiction", "learning", "directory"],
+    "languages": ["en"]
+  },
+  {
+    "name": "Anxiety and Depression Association of America",
+    "link": "https://adaa.org/",
+    "tags": ["anxiety", "depression", "learning", "directory"],
+    "languages": ["various"]
+  },
+  {
+    "name": "The School of Life",
+    "link": "https://www.theschooloflife.com/",
+    "tags": ["videos", "blog", "learning", "ios"],
+    "languages": ["en"]
+  },
+  {
+    "name": "A Close Look at PTSD Among Aging Adults",
+    "link": "https://www.seniorliving.org/research/ptsd-aging-adults/",
+    "tags": ["ptsd", "senior_citizens"],
     "languages": ["en"]
   }
 ]

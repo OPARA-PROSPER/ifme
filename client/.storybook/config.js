@@ -1,12 +1,8 @@
 /* eslint-disable import/no-extraneous-dependencies, import/no-unresolved, import/extensions */
 import backgrounds from '@storybook/addon-backgrounds';
 import { setDefaults, withInfo } from '@storybook/addon-info';
-import { setIntlConfig, withIntl } from 'storybook-addon-intl';
 import { addDecorator, configure } from '@storybook/react';
-
-import { loadLocales } from 'libs/i18n/I18nSetup';
-import { availableLocalesAsCodeArray, defaultLocale, getMessages } from 'libs/i18n/I18nUtils';
-
+import { withNotes } from '@storybook/addon-notes';
 import './stories.scss';
 
 // addon-info
@@ -26,27 +22,23 @@ const withInfoConfig = {
   },
 };
 
-const globalDecorator = (storyFn, context) => withInfo(withInfoConfig)(storyFn)(context);
+const globalDecorator = (storyFn, context) =>
+  withInfo(withInfoConfig)(storyFn)(context);
 addDecorator(globalDecorator);
-loadLocales();
-setIntlConfig({
-  locales: availableLocalesAsCodeArray,
-  defaultLocale,
-  getMessages,
-});
-addDecorator(withIntl);
-addDecorator(backgrounds([
-  { name: 'mulberry-wood', value: '#6D0839' },
-  { name: 'dark-gray', value: '#3F3F3F' }, // 25% gray
-  { name: 'gray', value: '#7F7F7F' }, // 50% gray
-  { name: 'light-gray', value: '#BFBFBF', default: true }, // 75% gray
-  { name: 'white', value: '#FFFFFF' },
-]));
+addDecorator(withNotes);
+addDecorator(
+  backgrounds([
+    { name: 'light-grey', value: '#D3D3D3' },
+    { name: 'grey', value: '#808080' },
+    { name: 'white', value: '#FFFFFF' },
+    { name: 'mulberry', value: '#6D0839' },
+  ])
+);
 
 // automatically import all files ending in *.stories.jsx
 const req = require.context('../app/stories', true, /.stories.jsx$/);
 function loadStories() {
-  req.keys().forEach((filename) => req(filename));
+  req.keys().forEach(filename => req(filename));
 }
 
 configure(loadStories, module);

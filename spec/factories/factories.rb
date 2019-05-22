@@ -1,5 +1,6 @@
 # frozen_string_literal: true
-
+# Do not use FactoryBot 5 behaviour, default to, "the association strategy would not always match the strategy of the parent object" https://github.com/thoughtbot/factory_bot/blob/master/GETTING_STARTED.md#associations
+FactoryBot.use_parent_strategy = false
 FactoryBot.define do
   factory :group_member do
     association :user, factory: :user1
@@ -21,7 +22,7 @@ FactoryBot.define do
     name { 'Test Name' }
     description { 'Test Description' }
     location { 'Test Location' }
-    time { Time.now }
+    time { Time.now.in_time_zone }
     maxmembers { 1 }
     date { Date.tomorrow }
     group
@@ -61,16 +62,11 @@ FactoryBot.define do
     status { :pending_from_ally }
   end
 
-  factory :category do
-    name  { 'Test Category' }
-    description { 'Test Description' }
-  end
-
   factory :medication do
     name { 'Fancy Medication Name' }
     dosage { 10 }
     dosage_unit { 'tablet' }
-    refill { 0o1 / 0o1 / 2020 }
+    refill { '01/01/2020' }
     strength { 12 }
     strength_unit { 'mg' }
     total { '30' }
@@ -103,11 +99,6 @@ FactoryBot.define do
     end
   end
 
-  factory :mood do
-    name  { 'Test Mood' }
-    description { 'Test Mood' }
-  end
-
   factory :comment do
     commentable_type { 'moment' }
     comment { 'Test Comment' }
@@ -119,5 +110,10 @@ FactoryBot.define do
 
   factory :refill_reminder do
     active { true }
+  end
+
+  factory :password_history do
+    user
+    encrypted_password { SecureRandom.hex }
   end
 end

@@ -3,7 +3,7 @@
 #
 # Table name: moments
 #
-#  id                      :integer          not null, primary key
+#  id                      :bigint(8)        not null, primary key
 #  category                :text
 #  name                    :string
 #  mood                    :text
@@ -23,6 +23,7 @@
 
 class Moment < ApplicationRecord
   include Viewer
+  include CommonMethods
   extend FriendlyId
 
   friendly_id :name
@@ -37,6 +38,7 @@ class Moment < ApplicationRecord
   before_save :strategy_array_data
 
   belongs_to :user
+
   has_many :comments, as: :commentable
 
   validates :comment, inclusion: [true, false]
@@ -82,5 +84,9 @@ class Moment < ApplicationRecord
   def shared?
     secret_share_identifier?
     # && Time.zone.now < secret_share_expires_at TODO: Turn off temporarily
+  end
+
+  def comments
+    Comment.comments_from(self)
   end
 end

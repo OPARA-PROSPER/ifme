@@ -1,207 +1,78 @@
 # frozen_string_literal: true
 
-# rubocop:disable ModuleLength
 module MedicationsHelper
-  include FormHelper
+  include DateTimeHelper
 
-  def new_medication_props
-    new_form_props(medication_form_inputs, medications_path)
-  end
-
-  def edit_medication_props
-    edit_form_props(medication_form_inputs, medication_path(@medication))
+  def present_medication(medication)
+    {
+      name: medication.name,
+      link: medication_path(medication),
+      actions: {
+        edit: edit_action(medication),
+        delete: delete_action(medication)
+      },
+      medicationBody: medication_body(medication)
+    }
   end
 
   private
 
-  def medication_form_inputs
-    current_user.google_oauth2_enabled? ? google_fields : common_fields
+  def edit_action(medication)
+    {
+      name: t('common.actions.edit'),
+      link: edit_medication_path(medication)
+    }
   end
 
-  # rubocop:disable MethodLength
-  def common_fields
-    [
-      {
-        id: 'medication_name',
-        type: 'text',
-        name: 'medication[name]',
-        label: t('common.name'),
-        value: @medication.name || nil,
-        required: true,
-        info: t('categories.form.name_hint'),
-        dark: true
-      },
-      {
-        id: 'medication_strength',
-        type: 'number',
-        name: 'medication[strength]',
-        label: t('medications.form.strength'),
-        value: @medication.strength || nil,
-        required: true,
-        info: t('medications.form.strength_hint'),
-        placeholder: t('medications.form.strength_placeholder'),
-        dark: true
-      },
-      {
-        id: 'medication_strength_unit',
-        type: 'select',
-        name: 'medication[strength_unit]',
-        value: @medication.strength_unit || t('medications.units.mg'),
-        dark: true,
-        options: [
-          {
-            id: 'medication_strength_unit_mg',
-            label: t('medications.units.mg'),
-            value: t('medications.units.mg')
-          },
-          {
-            id: 'medication_strength_unit_ml',
-            label: t('medications.units.ml'),
-            value: t('medications.units.ml')
-          }
-        ]
-      },
-      {
-        id: 'medication_total',
-        type: 'number',
-        name: 'medication[total]',
-        label: t('medications.index.total'),
-        value: @medication.total || nil,
-        required: true,
-        info: t('medications.form.total_hint'),
-        placeholder: t('medications.form.total_placeholder'),
-        dark: true
-      },
-      {
-        id: 'medication_total_unit',
-        type: 'select',
-        name: 'medication[total_unit]',
-        dark: true,
-        value: @medication.total_unit || t('medications.units.tablets.other'),
-        options: [
-          {
-            id: 'medication_total_unit_tablets',
-            label: t('medications.units.tablets.other'),
-            value: t('medications.units.tablets.other')
-          },
-          {
-            id: 'medication_total_unit_mg',
-            label: t('medications.units.mg'),
-            value: t('medications.units.mg')
-          },
-          {
-            id: 'medication_total_unit_ml',
-            label: t('medications.units.ml'),
-            value: t('medications.units.ml')
-          }
-        ]
-      },
-      {
-        id: 'medication_dosage',
-        type: 'number',
-        name: 'medication[dosage]',
-        label: t('medications.form.dosage'),
-        value: @medication.dosage || nil,
-        required: true,
-        info: t('medications.form.dosage_hint'),
-        placeholder: t('medications.form.dosage_placeholder'),
-        dark: true
-      },
-      {
-        id: 'medication_dosage_unit',
-        type: 'select',
-        name: 'medication[dosage_unit]',
-        dark: true,
-        value: @medication.dosage_unit || t('medications.units.tablets.other'),
-        options: [
-          {
-            id: 'medication_dosage_unit_tablets',
-            label: t('medications.units.tablets.other'),
-            value: t('medications.units.tablets.other')
-          },
-          {
-            id: 'medication_dosage_unit_mg',
-            label: t('medications.units.mg'),
-            value: t('medications.units.mg')
-          },
-          {
-            id: 'medication_dosage_unit_ml',
-            label: t('medications.units.ml'),
-            value: t('medications.units.ml')
-          }
-        ]
-      },
-      {
-        id: 'medication_refill',
-        type: 'date',
-        name: 'medication[refill]',
-        label: t('medications.form.refill'),
-        value: @medication.refill || nil,
-        info: t('medications.form.refill_hint'),
-        required: true,
-        dark: true
-      },
-      {
-        id: 'medication_comments',
-        type: 'textarea',
-        name: 'medication[comments]',
-        label: t('comment.plural'),
-        value: @medication.comments || nil,
-        info: t('medications.form.comments_hint'),
-        dark: true
-      },
-      {
-        id: 'medication_refill_reminder',
-        type: 'checkbox',
-        dark: true,
-        label: t('medications.refill_reminder'),
-        info: t('medications.form.refill_reminder_hint'),
-        name: 'medication[refill_reminder_attributes][active]',
-        checked: @medication&.refill_reminder&.active,
-        uncheckedValue: false,
-        value: true
-      },
-      {
-        id: 'medication_take_medication_reminder',
-        type: 'checkbox',
-        dark: true,
-        label: t('common.daily_reminder'),
-        info: t('medications.form.daily_reminder_hint'),
-        name: 'medication[take_medication_reminder_attributes][active]',
-        checked: @medication&.take_medication_reminder&.active,
-        uncheckedValue: false,
-        value: true
-      },
-      {
-        id: 'medication_refill_reminder_attributes_id',
-        name: 'medication[refill_reminder_attributes][id]',
-        type: 'hidden',
-        value: @medication&.refill_reminder&.id
-      },
-      {
-        id: 'medication_take_medication_reminder_attributes_id',
-        name: 'medication[take_medication_reminder_attributes][id]',
-        type: 'hidden',
-        value: @medication&.take_medication_reminder&.id
-      }
-    ]
+  def delete_action(medication)
+    {
+      name: t('common.actions.delete'),
+      link: medication_path(medication),
+      dataConfirm: t('common.actions.confirm'),
+      dataMethod: 'delete'
+    }
   end
-  # rubocop:enable MethodLength
 
-  # rubocop:disable MethodLength
-  def google_fields
-    common_fields.push(
-      id: 'medication_add_to_google_cal',
-      type: 'checkbox',
-      dark: true,
-      label: t('medications.form.add_to_google_cal'),
-      info: t('medications.form.google_cal_hint'),
-      name: 'medication[add_to_google_cal]',
-      checked: @medication.add_to_google_cal,
-      uncheckedValue: false,
-      value: true
-    )
+  def medication_body(medication)
+    {
+      medicationStrength: medication_strength(medication),
+      quantity: t('medications.quantity'),
+      medicationDosages: medication_dosages(medication),
+      refill: t('medications.refill'),
+      medicationRefill: format_date(medication.refill)
+    }.merge(medication_units(medication))
   end
-  # rubocop:enable MethodLength
+
+  def medication_units(medication)
+    {
+      totalUnits: t('medications.units.display',
+                    count: medication.total,
+                    unit: medication.total_unit),
+      dosageUnit: t('medications.units.display',
+                    count: medication.dosage,
+                    unit: medication.dosage_unit)
+    }
+  end
+
+  def medication_strength(medication)
+    {
+      strength: t('medications.strength'),
+      strengthUnits: t('medications.units.display',
+                       count: medication.strength,
+                       unit: medication.strength_unit)
+    }
+  end
+
+  def medication_dosages(medication)
+    {
+      isDaily: medication.daily?,
+      dosageDaily: t('medications.dosage'),
+      dosageWeekly: t('medications.weekly_dosage'),
+      weeklyDosageMap: weekly_dosage(medication)
+    }
+  end
+
+  def weekly_dosage(medication)
+    medication.weekly_dosage.map { |i| t(:'date.abbr_day_names')[i] }.join(', ')
+  end
 end
-# rubocop:enable ModuleLength

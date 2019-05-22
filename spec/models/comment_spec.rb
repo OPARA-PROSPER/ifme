@@ -1,10 +1,9 @@
 # frozen_string_literal: true
-
 # == Schema Information
 #
 # Table name: comments
 #
-#  id               :integer          not null, primary key
+#  id               :bigint(8)        not null, primary key
 #  commentable_type :string
 #  commentable_id   :integer
 #  comment_by       :integer
@@ -81,6 +80,58 @@ describe Comment do
         create :meeting_member, user_id: user1.id, leader: true, meeting_id: new_meeting.id
         new_comment = Comment.create_from!(comment: short_comment, commentable_type: 'meeting', commentable_id: new_meeting.id, comment_by: user1.id, visibility: 'all')
         expect(Comment.count).to eq(1)
+      end
+    end
+  end
+
+  describe 'comments' do
+    before do
+      create(
+        :comment,
+        commentable_id: 0,
+        commentable_type: commentable_type,
+        comment_by: user2.id,
+        comment: short_comment,
+        visibility: 'all'
+      )
+      create(
+        :comment,
+        commentable_id: commentable.id,
+        commentable_type: commentable_type,
+        comment_by: user2.id,
+        comment: short_comment,
+        visibility: 'all'
+      )
+    end
+
+    context 'when commentable type is a moment' do
+      let(:commentable) { create(:moment, comment: true, user_id: user1.id, viewers: [user2.id]) }
+      let(:commentable_type) { 'moment' }
+
+      it 'returns correct number of comments' do
+        expect(Comment.comments_from(commentable).count).to eq(1)
+        expect(Comment.count).to eq(2)
+      end
+    end
+
+    context 'when commentable type is a strategy' do
+      let(:commentable) { create(:strategy, comment: true, user_id: user1.id, viewers: [user2.id]) }
+      let(:commentable_type) { 'strategy' }
+
+      it 'returns correct number of comments' do
+        expect(Comment.comments_from(commentable).count).to eq(1)
+        expect(Comment.count).to eq(2)
+      end
+    end
+
+    context 'when commentable type is a meeting' do
+      let(:commentable) { create(:meeting) }
+      let(:commentable_type) { 'meeting' }
+
+      it 'returns correct number of comments' do
+        create :meeting_member, user_id: user1.id, leader: true, meeting_id: commentable.id
+        expect(Comment.comments_from(commentable).count).to eq(1)
+        expect(Comment.count).to eq(2)
       end
     end
   end

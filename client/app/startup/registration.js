@@ -4,40 +4,47 @@
  * this bundle will be loaded in production.
  */
 import ReactOnRails from 'react-on-rails';
-import { loadLocales } from '../libs/i18n/I18nSetup';
+import { scrollToTop } from './scrollToTop';
 import '../styles/_global.scss';
+import { Accordion } from '../components/Accordion';
 import { Avatar } from '../components/Avatar';
+import { BaseContainer } from '../components/BaseContainer';
 import { Chart } from '../components/Chart';
 import { ChartControl } from '../components/Chart/ChartControl';
+import { Form } from '../components/Form';
 import { Header } from '../components/Header';
 import { HeaderProfile } from '../components/Header/HeaderProfile';
-import { Resource } from '../components/Resource';
-import { Tag } from '../components/Tag';
 import { Logo } from '../components/Logo';
+import { Modal } from '../components/Modal';
+import { Notifications } from '../widgets/Notifications';
+import { Resource } from '../components/Resource';
+import { Resources } from '../widgets/Resources';
 import { Story } from '../components/Story';
 import { StoryDraft } from '../components/Story/StoryDraft';
 import { StoryActions } from '../components/Story/StoryActions';
 import { StoryCategories } from '../components/Story/StoryCategories';
 import { StoryMoods } from '../components/Story/StoryMoods';
 import { StoryDate } from '../components/Story/StoryDate';
+import { Tag } from '../components/Tag';
 import { Tooltip } from '../components/Tooltip';
-import { Modal } from '../components/Modal';
-import { Form } from '../components/Form';
-import { Accordion } from '../components/Accordion';
-import { Resources } from '../widgets/Resources';
-import { Notifications } from '../widgets/Notifications';
+import { ToggleLocale } from '../widgets/ToggleLocale';
+import { Comments } from '../widgets/Comments';
+import { Input } from '../components/Input';
 
-loadLocales();
+scrollToTop();
 
 // This is how react_on_rails can see the Components in the browser.
 ReactOnRails.register({
-  Avatar,
   Accordion,
+  Avatar,
+  BaseContainer,
   Chart,
   ChartControl,
+  Comments,
   Form,
   Header,
   HeaderProfile,
+  Input,
   Logo,
   Modal,
   Notifications,
@@ -50,5 +57,6 @@ ReactOnRails.register({
   StoryDraft,
   StoryMoods,
   Tag,
+  ToggleLocale,
   Tooltip,
 });

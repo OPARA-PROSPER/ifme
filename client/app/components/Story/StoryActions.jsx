@@ -7,6 +7,9 @@ import {
   faLock,
   faDoorOpen,
   faDoorClosed,
+  faExclamationTriangle,
+  faCalendarPlus,
+  faCalendarMinus,
 } from '@fortawesome/free-solid-svg-icons';
 import css from './Story.scss';
 import { Tooltip } from '../Tooltip';
@@ -16,6 +19,7 @@ export type Action = {
   link: string,
   dataMethod?: string,
   dataConfirm?: string,
+  onClick?: Function,
 };
 
 export type Actions = {
@@ -23,6 +27,9 @@ export type Actions = {
   delete?: Action,
   join?: Action,
   leave?: Action,
+  report?: Action,
+  add_to_google_cal?: Action,
+  remove_from_google_cal?: Action,
   viewers?: string,
 };
 
@@ -36,7 +43,10 @@ const EDIT = 'edit';
 const DELETE = 'delete';
 const JOIN = 'join';
 const LEAVE = 'leave';
+const REPORT = 'report';
 const VIEWERS = 'viewers';
+const ADD_TO_G_CAL = 'add_to_google_cal';
+const REMOVE_FROM_G_CAL = 'remove_from_google_cal';
 
 const classMap = (dark: ?boolean) => {
   const className = dark ? css.actionDark : css.action;
@@ -45,7 +55,16 @@ const classMap = (dark: ?boolean) => {
     delete: <FontAwesomeIcon icon={faTrash} className={className} />,
     join: <FontAwesomeIcon icon={faDoorOpen} className={className} />,
     leave: <FontAwesomeIcon icon={faDoorClosed} className={className} />,
+    report: (
+      <FontAwesomeIcon icon={faExclamationTriangle} className={className} />
+    ),
     viewers: <FontAwesomeIcon icon={faLock} className={className} />,
+    add_to_google_cal: (
+      <FontAwesomeIcon icon={faCalendarPlus} className={className} />
+    ),
+    remove_from_google_cal: (
+      <FontAwesomeIcon icon={faCalendarMinus} className={className} />
+    ),
   };
 };
 
@@ -71,35 +90,49 @@ const displayViewers = (
   </div>
 );
 
+const titleItem = (item: string) => item.charAt(0).toUpperCase() + item.slice(1);
+
+const tooltipElement = (item: string, actions: Actions, dark: ?boolean) => {
+  const {
+    link, dataMethod, dataConfirm, name, onClick,
+  } = actions[item];
+  return (
+    <a
+      href={link}
+      data-method={dataMethod}
+      data-confirm={dataConfirm}
+      aria-label={name}
+      onClick={
+        onClick
+          ? (e: SyntheticEvent<HTMLInputElement>) => onClick(e, link)
+          : undefined
+      }
+    >
+      {classMap(dark)[item]}
+    </a>
+  );
+};
+
 const displayLink = (
   actions: Actions,
   item: string,
   hasStory: ?boolean,
   dark: ?boolean,
-) => {
-  const titleItem = item.charAt(0).toUpperCase() + item.slice(1);
-  const element = (
-    <a
-      href={actions[item].link}
-      data-method={actions[item].dataMethod}
-      data-confirm={actions[item].dataConfirm}
-      aria-label={actions[item].name}
-    >
-      {classMap(dark)[item]}
-    </a>
-  );
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      key={item}
-      aria-label={actions[item]}
-      className={`storyActions${titleItem}`}
-    >
-      <Tooltip element={element} text={actions[item].name} right={!!hasStory} />
-    </div>
-  );
-};
+) => (
+  <div
+    role="button"
+    tabIndex={0}
+    key={item}
+    aria-label={actions[item]}
+    className={`storyActions${titleItem(item)}`}
+  >
+    <Tooltip
+      element={tooltipElement(item, actions, dark)}
+      text={actions[item].name}
+      right={!!hasStory}
+    />
+  </div>
+);
 
 const displayItem = (
   actions: Actions,
@@ -115,7 +148,16 @@ export const StoryActions = (props: Props) => {
   const { actions, hasStory, dark } = props;
   return (
     <div className={css.actions}>
-      {[JOIN, EDIT, LEAVE, DELETE, VIEWERS].map(
+      {[
+        JOIN,
+        ADD_TO_G_CAL,
+        REMOVE_FROM_G_CAL,
+        EDIT,
+        LEAVE,
+        DELETE,
+        REPORT,
+        VIEWERS,
+      ].map(
         (item: string) => (actions[item] ? displayItem(actions, item, hasStory, dark) : null),
       )}
     </div>

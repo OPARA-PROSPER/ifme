@@ -9,8 +9,8 @@ defaults: &defaults
   docker:
     - image: circleci/build-image:ubuntu-14.04-XXL-upstart-1189-5614f37
       command: /sbin/init
-    - image: circleci/ruby:2.3.4
-    - image: circleci/node:8.12.0
+    - image: circleci/ruby:2.6.0
+    - image: circleci/node:11.10.1
 jobs:
   setup-coverage:
     <<: *defaults
@@ -35,10 +35,10 @@ jobs:
       - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
       - run:
           working_directory: ~/ifmeorg/ifme
-          command: rm -f ifmeorg/ifme/.rvmrc; echo 2.3.4 > ifmeorg/ifme/.ruby-version; rvm use 2.3.4 --default
+          command: rm -f ifmeorg/ifme/.rvmrc; echo 2.6.0 > ifmeorg/ifme/.ruby-version; rvm use 2.6.0 --default
       - run:
           working_directory: ~/ifmeorg/ifme
-          command: nvm install 8.12.0 && nvm alias default 8.12.0
+          command: nvm install 11.10.1 && nvm alias default 11.10.1
       - restore_cache:
           keys:
           - v1-dep-{{ .Branch }}-
@@ -76,12 +76,19 @@ jobs:
             RAILS_ENV: test
             RACK_ENV: test
       - run: RAILS_ENV=test bundle exec rake db:create db:schema:load
+      - run: RAILS_ENV=test bundle exec rake react_on_rails:locale
       - run:
           name: Run React Jest Tests
           command: |
             set -e
-            cd client && RAILS_ENV=test bundle exec rake react_on_rails:locale && yarn lint:setup && yarn lint:build && yarn build:test && yarn test --coverage
+            cd client && yarn lint:flow && yarn lint:eslint && yarn test:circleci
             cd ~/ifmeorg/ifme/tmp && ./cc-test-reporter format-coverage -t lcov -o codeclimate.frontend.json ../client/coverage/lcov.info
+      - run:
+          name: Run YAML linter
+          command: |
+            set -e
+            pip install yamllint
+            cd config && yamllint locales/
       - persist_to_workspace:
           root: tmp
           paths:
@@ -96,11 +103,6 @@ jobs:
           root: tmp
           paths:
             - codeclimate.backend.json
-      - run:
-          name: Run Rails Jasmine Tests
-          command: |
-            set -e
-            RAILS_ENV=test bundle exec rake jasmine:ci
       - run: bundle exec bundle-audit check --update
       - store_test_results:
           path: /tmp/circleci-test-results
@@ -128,6 +130,40 @@ jobs:
           name: Deploy Master to Heroku
           command: |
             git push https://heroku:$HEROKU_API_KEY@git.heroku.com/ifme.git master
+  deploy-storybook:
+    <<: *defaults
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/ifmeorg/ifme/tmp
+      - run:
+          working_directory: ~/ifmeorg/ifme
+          command: rm -f ifmeorg/ifme/.rvmrc; echo 2.6.0 > ifmeorg/ifme/.ruby-version; rvm use 2.6.0 --default
+      - run:
+          working_directory: ~/ifmeorg/ifme
+          command: nvm install 11.10.1 && nvm alias default 11.10.1
+      - restore_cache:
+          keys:
+          - v1-dep-{{ .Branch }}-
+          - v1-dep-master-
+          - v1-dep-
+      - run: gem install bundler
+      - run: bundle install --path=vendor/bundle --jobs=4 --retry=3
+      - run: rm -rf ~/.yarn
+      - run: npm i -g yarn
+      - run: yarn install
+      - run:
+          name: Deploy Storybook
+          command: |
+            cd client
+            yarn deploy:storybook
+      - save_cache:
+          key: v1-dep-{{ .Branch }}-{{ epoch }}
+          paths:
+          - ~/.cache/yarn
+          - ./node_modules
+          - ./vendor/bundle
+
 workflows:
   version: 2
   build-test:
@@ -166,6 +202,12 @@ workflows:
       - deploy:
           requires:
             - upload-coverage
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v[0-9]+\.[0-9]+\.[0-9]+/
+      - deploy-storybook:
           filters:
             branches:
               ignore: /.*/

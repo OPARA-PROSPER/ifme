@@ -14,7 +14,7 @@
     <% end %>
     <% if User.where(id: @profile.id).first.location.present? %>
       <div>
-        <i class="fa fa-location-arrow fa-inline smallerMarginRight"></i><%= User.where(id: @profile.id).first.location %>
+        <i class="fa fa-location-arrow fa-inline smallMarginRight"></i><%= User.where(id: @profile.id).first.location %>
       </div>
     <% end %>
     <% if @profile.id != current_user.id %>
@@ -26,6 +26,9 @@
         <div>
           <%= link_to t('common.actions.remove'), remove_allies_path(ally_id: @profile.id), method: :post, data: { confirm: t('common.actions.confirm') } %>
         </div>
+        <div>
+          <%= link_to t('common.actions.report'), new_report_path(uid: @profile.uid) %>
+        </div>
       <% elsif current_user.allies_by_status(:pending_from_user).include? @profile %>
         <div>
           <%= link_to t('allies.accept'), add_allies_path(ally_id: @profile.id), method: :post %> | <%= link_to t('allies.reject'), remove_allies_path(ally_id: @profile.id), method: :post, data: { confirm: t('common.actions.confirm') } %>
@@ -36,27 +39,33 @@
         </div>
       <% end %>
     <% end %>
+    <% if current_user.admin? %>
+      <% if @profile.banned? %>
+        <div>
+          <%= link_to t('reports.remove_ban'), remove_ban_profile_index_path(user_id: @profile.id), method: :post %>
+        </div>
+      <% else %>
+        <div>
+          <%= link_to t('reports.ban_user'), add_ban_profile_index_path(user_id: @profile.id), method: :post %>
+        </div>
+      <% end %>
+    <% end %>
   </div>
 </div>
 
 <% if !@stories.nil? && @stories.any? %>
-  <div class="spacer"></div>
-<% end %>
-
-<%= render partial: '/shared/stats', locals: { data_type: 'category', profile: @profile.id } %>
-<%= render partial: '/shared/stats', locals: { data_type: 'mood', profile: @profile.id } %>
-<%= render partial: '/shared/stats', locals: { data_type: 'strategy', profile: @profile.id } %>
-
-<% if !@stories.nil? && @stories.any? %>
+  <div class="marginTop">
+    <%= render partial: '/shared/stats', locals: { data_type: 'category', user: @profile } %>
+    <%= render partial: '/shared/stats', locals: { data_type: 'mood', user: @profile } %>
+    <%= render partial: '/shared/stats', locals: { data_type: 'strategy', user: @profile } %>
+  </div>
   <div class="title">
     <%= t('pages.home.stories') %>
   </div>
-
-  <div class="gridTwo">
-    <% @stories.each do |story| %>
-      <%= render partial: '/stories/moment_or_strategy', locals: { item: story } %>
-    <% end %>
-  </div>
-
-  <%= paginate @stories %>
+  <%= react_component('BaseContainer', props: {
+    container: 'StoryContainer',
+    data: moments_or_strategy_props(@stories),
+    fetchUrl: data_profile_index_path(uid: params[:uid]),
+    lastPage: @stories.last_page?,
+  }) %>
 <% end %>

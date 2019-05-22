@@ -1,10 +1,9 @@
 # frozen_string_literal: true
-
 # == Schema Information
 #
 # Table name: users
 #
-#  id                     :integer          not null, primary key
+#  id                     :bigint(8)        not null, primary key
 #  email                  :string           default(""), not null
 #  encrypted_password     :string           default(""), not null
 #  reset_password_token   :string
@@ -31,8 +30,8 @@
 #  invitation_sent_at     :datetime
 #  invitation_accepted_at :datetime
 #  invitation_limit       :integer
-#  invited_by_id          :integer
 #  invited_by_type        :string
+#  invited_by_id          :integer
 #  invitations_count      :integer          default(0)
 #  comment_notify         :boolean
 #  ally_notify            :boolean
@@ -41,12 +40,32 @@
 #  locale                 :string
 #  access_expires_at      :datetime
 #  refresh_token          :string
+#  banned                 :boolean          default(FALSE)
+#  admin                  :boolean          default(FALSE)
 #
 
 describe User do
   let(:current_time) { Time.zone.now }
 
-  describe '.find_for_google_oauth2' do
+  describe '#active_for_authentication?' do
+    context 'has unbanned user' do
+      let(:user) { create(:user) }
+
+      it 'returns true' do
+        expect(user.active_for_authentication?).to eq(true)
+      end
+    end
+
+    context 'has banned user' do
+      let(:user) { create(:user, banned: true) }
+
+      it 'returns false' do
+        expect(user.active_for_authentication?).to eq(false)
+      end
+    end
+  end
+
+  describe '#find_for_google_oauth2' do
     let(:access_token) do
       double(
         info: double(email: 'some@user.com', name: 'some name'),
@@ -59,7 +78,7 @@ describe User do
     end
 
     context 'an existing user' do
-      let!(:user) { User.create(name: 'some name', email: 'some@user.com', password: 'asdfasdf') }
+      let!(:user) { User.create(name: 'some name', email: 'some@user.com', password: 'asdfaS1!df') }
 
       it 'updates token information' do
         User.find_for_google_oauth2(access_token)
@@ -68,7 +87,7 @@ describe User do
         expect(user.token).to eq('some token')
         expect(user.refresh_token).to eq('some refresh token')
         expect(user.uid).to eq('some uid')
-        expect(user.access_expires_at).to eq(Time.at(current_time.to_i))
+        expect(user.access_expires_at).to eq(Time.at(current_time.to_i).in_time_zone)
       end
 
       it 'returns a user' do
@@ -93,7 +112,7 @@ describe User do
     let!(:user) do
       User.create(name: 'some name',
                   email: 'some@user.com',
-                  password: 'asdfasdf',
+                  password: 'asdfasdF!1',
                   token: 'some token')
     end
 
@@ -148,6 +167,55 @@ describe User do
       result = user.available_groups('groups.created_at DESC')
 
       expect(result).to eq [group_only_ally_belongs_to]
+    end
+  end
+
+  describe '#update_access_token' do
+    let!(:user) do
+      User.create(name: 'some name',
+                  email: 'some@user.com',
+                  password: 'asdfasdf',
+                  token: 'some token')
+    end
+
+    request = {
+      'refresh_token' => nil,
+      'client_id' => ENV['GOOGLE_CLIENT_ID'],
+      'client_secret' => ENV['GOOGLE_CLIENT_SECRET'],
+      'grant_type' => 'refresh_token'
+    }
+
+    context 'when request is successful' do
+      before do
+        response = {
+          'access_token': 'MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3',
+          'token_type': 'bearer',
+          'expires_in': 3600,
+          'refresh_token': 'IwOGYzYTlmM2YxOTQ5MGE3YmNmMDFkNTVk',
+          'scope': 'create'
+        }.to_json
+
+        Net::HTTP.stub(:post_form).with(URI.parse(User::OAUTH_TOKEN_URL), request) { double(body: response) }
+      end
+
+      it 'returns a new access token' do
+        expect(user.update_access_token).to eq('MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3')
+      end
+    end
+
+    context 'when request is unsuccessful' do
+      before do
+        response = {
+          'error': 'invalid request',
+          'error_description': 'Could not determine client ID from request.'
+        }.to_json
+
+        Net::HTTP.stub(:post_form).with(URI.parse(User::OAUTH_TOKEN_URL), request) { double(body: response) }
+      end
+
+      it 'returns a new access token' do
+        expect { user.update_access_token }.to raise_error(NoMethodError)
+      end
     end
   end
 end
